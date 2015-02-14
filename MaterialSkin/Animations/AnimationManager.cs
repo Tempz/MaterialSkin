@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaterialSkin.Animations
@@ -22,11 +19,11 @@ namespace MaterialSkin.Animations
         public delegate void AnimationProgress(object sender);
         public event AnimationProgress OnAnimationProgress;
 
-        private List<double> animationProgresses;
-        private List<Point> animationSources;
-        private List<AnimationDirection> animationDirections;
-        private List<object[]> animationDatas;
- 
+        private readonly List<double> animationProgresses;
+        private readonly List<Point> animationSources;
+        private readonly List<AnimationDirection> animationDirections;
+        private readonly List<object[]> animationDatas;
+
         private const double MIN_VALUE = 0.00;
         private const double MAX_VALUE = 1.00;
 
@@ -129,25 +126,25 @@ namespace MaterialSkin.Animations
             {
                 if (Singular && animationDirections.Count > 0)
                 {
-                    this.animationDirections[0] = animationDirection;
+                    animationDirections[0] = animationDirection;
                 }
                 else
                 {
-                    this.animationDirections.Add(animationDirection);
+                    animationDirections.Add(animationDirection);
                 }
 
                 if (Singular && animationSources.Count > 0)
                 {
-                    this.animationSources[0] = animationSource;
+                    animationSources[0] = animationSource;
                 }
                 else
                 {
-                    this.animationSources.Add(animationSource);
+                    animationSources.Add(animationSource);
                 }
 
                 if (!(Singular && animationProgresses.Count > 0))
                 {
-                    switch (this.animationDirections[this.animationDirections.Count - 1])
+                    switch (animationDirections[animationDirections.Count - 1])
                     {
                         case AnimationDirection.InOutRepeatingIn:
                         case AnimationDirection.InOutIn:
@@ -166,7 +163,7 @@ namespace MaterialSkin.Animations
 
                 if (Singular && animationDatas.Count > 0)
                 {
-                    this.animationDatas[0] = data ?? new object[] { };
+                    animationDatas[0] = data ?? new object[] { };
                 }
                 else
                 {
@@ -209,7 +206,7 @@ namespace MaterialSkin.Animations
                     if (animationDirections[i] == AnimationDirection.InOutIn) return;
                     if (animationDirections[i] == AnimationDirection.InOutRepeatingIn) return;
                     if (animationDirections[i] == AnimationDirection.InOutRepeatingOut) return;
-                    if (animationDirections[i] == AnimationDirection.InOutIn && animationProgresses[i] != MAX_VALUE) return;
+                    if (animationDirections[i] == AnimationDirection.InOutOut && animationProgresses[i] != MAX_VALUE) return;
                     if (animationDirections[i] == AnimationDirection.In && animationProgresses[i] != MAX_VALUE) return;
                 }
                 
@@ -265,9 +262,10 @@ namespace MaterialSkin.Animations
                     return AnimationEaseOut.CalculateProgress(animationProgresses[index]);
                 case AnimationType.CustomQuadratic:
                     return AnimationCustomQuadratic.CalculateProgress(animationProgresses[index]);
+                default:
+                    throw new NotImplementedException("The given AnimationType is not implemented");
             }
 
-            throw new NotImplementedException("The given AnimationType is not implemented");
         }
 
         public Point GetSource(int index)

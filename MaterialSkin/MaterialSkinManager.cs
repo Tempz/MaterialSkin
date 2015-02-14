@@ -1,17 +1,12 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using MaterialSkin.Controls;
-
+using MaterialSkin.Properties;
 
 namespace MaterialSkin
 {
@@ -35,32 +30,16 @@ namespace MaterialSkin
             }
         }
 
-        public ColorManager.PrimaryColorPair PrimaryColorPair;
-        private ColorManager.PrimaryColors primaryPalette;
-        public ColorManager.PrimaryColors PrimaryPalette
+	    private ColorScheme colorScheme;
+        public ColorScheme ColorScheme
         {
-            get { return primaryPalette; }
+			get { return colorScheme; }
             set
             {
-                primaryPalette = value;
-                PrimaryColorPair = ColorManager.PrimaryPalettes[value];
+				colorScheme = value;
                 UpdateBackgrounds();
             }
         }
-
-        public ColorManager.AccentColorPair AccentColorPair;
-        private ColorManager.AccentColors accentPalette;
-        public ColorManager.AccentColors AccentPalette
-        {
-            get { return accentPalette; }
-            set
-            {
-                accentPalette = value;
-                AccentColorPair = ColorManager.AccentPalettes[value];
-                UpdateBackgrounds();
-            }
-        }
-
 
         public enum Themes : byte
         {
@@ -250,13 +229,12 @@ namespace MaterialSkin
 
         private MaterialSkinManager()
         {
-            ROBOTO_MEDIUM_12 = new Font(LoadFont(Properties.Resources.Roboto_Medium), 12f);
-            ROBOTO_MEDIUM_10 = new Font(LoadFont(Properties.Resources.Roboto_Medium), 10f);
-            ROBOTO_REGULAR_11 = new Font(LoadFont(Properties.Resources.Roboto_Regular), 11f);
-            ROBOTO_MEDIUM_11 = new Font(LoadFont(Properties.Resources.Roboto_Medium), 11f);
-            Theme = Themes.LIGHT;
-            PrimaryPalette = ColorManager.PrimaryColors.Indigo;
-            AccentPalette = ColorManager.AccentColors.Pink;
+            ROBOTO_MEDIUM_12 = new Font(LoadFont(Resources.Roboto_Medium), 12f);
+            ROBOTO_MEDIUM_10 = new Font(LoadFont(Resources.Roboto_Medium), 10f);
+            ROBOTO_REGULAR_11 = new Font(LoadFont(Resources.Roboto_Regular), 11f);
+            ROBOTO_MEDIUM_11 = new Font(LoadFont(Resources.Roboto_Medium), 11f);
+			Theme = Themes.LIGHT;
+			ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
         }
 
         public static MaterialSkinManager Instance

@@ -11,7 +11,7 @@ namespace MaterialSkinExample
 {
     public partial class MainForm : MaterialForm
     {
-        private MaterialSkinManager materialSkinManager;
+        private readonly MaterialSkinManager materialSkinManager;
         public MainForm()
         {
             InitializeComponent();
@@ -19,9 +19,8 @@ namespace MaterialSkinExample
             // Initialize MaterialSkinManager
             materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
-            materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
-            materialSkinManager.PrimaryPalette = ColorManager.PrimaryColors.Indigo;
-            materialSkinManager.AccentPalette = ColorManager.AccentColors.Pink;
+			materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
+			materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
         }
 
         private void materialButton1_Click(object sender, EventArgs e)
@@ -29,51 +28,25 @@ namespace MaterialSkinExample
             materialSkinManager.Theme = materialSkinManager.Theme == MaterialSkinManager.Themes.DARK ? MaterialSkinManager.Themes.LIGHT : MaterialSkinManager.Themes.DARK;
         }
 
+	    private int colorSchemeIndex;
         private void materialRaisedButton1_Click(object sender, EventArgs e)
         {
-            FieldInfo[] fieldInfos = typeof(ColorManager.PrimaryColors).GetFields(BindingFlags.Static | BindingFlags.Public);
-            var defaultValue = default(ColorManager.PrimaryColors);
-            List<ColorManager.PrimaryColors> colors = new List<ColorManager.PrimaryColors>();
-            foreach (FieldInfo info in fieldInfos)
-            {
-                colors.Add((ColorManager.PrimaryColors)info.GetValue(defaultValue));
-            }
-            int currentIndex = colors.IndexOf(materialSkinManager.PrimaryPalette);
-            if (currentIndex == colors.Count - 1)
-            {
-                currentIndex = 0;
-            }
-            else
-            {
-                currentIndex++;
-            }
-            materialSkinManager.PrimaryPalette = colors[currentIndex];
-        }
+	        colorSchemeIndex++;
+	        if (colorSchemeIndex > 2) colorSchemeIndex = 0;
 
-        private void materialRaisedButton2_Click(object sender, EventArgs e)
-        {
-            FieldInfo[] fieldInfos = typeof(ColorManager.AccentColors).GetFields(BindingFlags.Static | BindingFlags.Public);
-            var defaultValue = default(ColorManager.AccentColors);
-            List<ColorManager.AccentColors> colors = new List<ColorManager.AccentColors>();
-            foreach (FieldInfo info in fieldInfos)
-            {
-                colors.Add((ColorManager.AccentColors)info.GetValue(defaultValue));
-            }
-            int currentIndex = colors.IndexOf(materialSkinManager.AccentPalette);
-            if (currentIndex == colors.Count - 1)
-            {
-                currentIndex = 0;
-            }
-            else
-            {
-                currentIndex++;
-            }
-            materialSkinManager.AccentPalette = colors[currentIndex];
-        }
-
-        private void materialFlatButton2_Click(object sender, EventArgs e)
-        {
-
+			//These are just example color schemes
+	        switch (colorSchemeIndex)
+	        {
+				case 0:
+					materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
+			        break;
+				case 1:
+					materialSkinManager.ColorScheme = new ColorScheme(Primary.Indigo500, Primary.Indigo700, Primary.Indigo100, Accent.Pink200, TextShade.WHITE);
+			        break;
+				case 2:
+					materialSkinManager.ColorScheme = new ColorScheme(Primary.Green600, Primary.Green700, Primary.Green200, Accent.Red100, TextShade.WHITE);
+					break;
+	        }
         }
     }
 }

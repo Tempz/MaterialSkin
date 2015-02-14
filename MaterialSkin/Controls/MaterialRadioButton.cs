@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
@@ -9,33 +10,56 @@ namespace MaterialSkin.Controls
 {
     public class MaterialRadioButton : RadioButton, IMaterialControl
     {
+        [Browsable(false)]
         public int Depth { get; set; }
+        [Browsable(false)]
         public MaterialSkinManager SkinManager { get { return MaterialSkinManager.Instance; } }
+        [Browsable(false)]
         public MouseState MouseState { get; set; }
-        
+        [Browsable(false)]
         public Point MouseLocation { get; set; }
 
-        private bool _ripple = false;
+        private bool ripple;
+        [Category("Behavior")]
         public bool Ripple
         {
-            get { return _ripple; }
+            get { return ripple; }
             set
             {
-                _ripple = value;
+                ripple = value;
                 AutoSize = AutoSize; //Make AutoSize directly set the bounds.
+
+                if (value)
+                {
+                    Margin = new Padding(0);
+                }
+
                 Invalidate();
             }
         }
 
+		// animation managers
         private readonly AnimationManager animationManager;
         private readonly AnimationManager rippleAnimationManager;
 
+		// size related variables which should be recalculated onsizechanged
+		private Rectangle radioButtonBounds;
+        private int boxOffset;
+
+		// size constants
+		private const int RADIOBUTTON_SIZE = 19;
+		private const int RADIOBUTTON_SIZE_HALF = RADIOBUTTON_SIZE / 2;
+		private const int RADIOBUTTON_OUTER_CIRCLE_WIDTH = 2;
+		private const int RADIOBUTTON_INNER_CIRCLE_SIZE = RADIOBUTTON_SIZE - (2 * RADIOBUTTON_OUTER_CIRCLE_WIDTH);
+
         public MaterialRadioButton()
-        {
-            animationManager = new AnimationManager()
+		{
+			SetStyle(ControlStyles.DoubleBuffer | ControlStyles.OptimizedDoubleBuffer, true);
+
+            animationManager = new AnimationManager
             {
                 AnimationType = AnimationType.EaseInOut,
-                Increment = 0.06,
+                Increment = 0.06
             };
             rippleAnimationManager = new AnimationManager(false)
             {
@@ -47,22 +71,23 @@ namespace MaterialSkin.Controls
             rippleAnimationManager.OnAnimationProgress += sender => Invalidate();
 
             CheckedChanged += (sender, args) => animationManager.StartNewAnimation(Checked ? AnimationDirection.In : AnimationDirection.Out);
+			
+            SizeChanged += OnSizeChanged;
 
-            Ripple = false;
+            Ripple = true;
             MouseLocation = new Point(-1, -1);
+        }
+        private void OnSizeChanged(object sender, EventArgs eventArgs)
+        {
+            boxOffset = Height / 2 - (int)Math.Ceiling(RADIOBUTTON_SIZE / 2d);
+            radioButtonBounds = new Rectangle(boxOffset, boxOffset, RADIOBUTTON_SIZE, RADIOBUTTON_SIZE);
         }
 
         public override Size GetPreferredSize(Size proposedSize)
         {
-            int boxOffset = Height / 2 - 9;
-            int w = boxOffset + 22 + (int)CreateGraphics().MeasureString(Text, SkinManager.ROBOTO_MEDIUM_10).Width;
-            return Ripple ? new Size(w, 30) : new Size(w, 20);
+            int width = boxOffset + 20 + (int)CreateGraphics().MeasureString(Text, SkinManager.ROBOTO_MEDIUM_10).Width;
+            return Ripple ? new Size(width, 30) : new Size(width, 20);
         }
-
-        private const int RADIOBUTTON_SIZE = 19;
-        private const int RADIOBUTTON_SIZE_HALF = RADIOBUTTON_SIZE / 2;
-        private const int RADIOBUTTON_OUTER_CIRCLE_WIDTH = 2;
-        private const int RADIOBUTTON_INNER_CIRCLE_SIZE = RADIOBUTTON_SIZE - (2 * RADIOBUTTON_OUTER_CIRCLE_WIDTH);
 
         protected override void OnPaint(PaintEventArgs pevent)
         {
@@ -70,9 +95,9 @@ namespace MaterialSkin.Controls
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
+            // clear the control
             g.Clear(Parent.BackColor);
 
-            int boxOffset = Height / 2 - (int)Math.Ceiling(RADIOBUTTON_SIZE / 2d);
             var RADIOBUTTON_CENTER = boxOffset + RADIOBUTTON_SIZE_HALF;
 
             var animationProgress = animationManager.GetProgress();
@@ -83,9 +108,10 @@ namespace MaterialSkin.Controls
             float animationSizeHalf = animationSize / 2;
             animationSize = (float)(animationProgress * 9f);
 
-            var brush = new SolidBrush(Color.FromArgb(colorAlpha, Enabled ? SkinManager.AccentColorPair.AccentColor : SkinManager.GetCheckBoxOffDisabledColor()));
+			var brush = new SolidBrush(Color.FromArgb(colorAlpha, Enabled ? SkinManager.ColorScheme.AccentColor : SkinManager.GetCheckBoxOffDisabledColor()));
             var pen = new Pen(brush.Color);
 
+            // draw ripple animation
             if (Ripple && rippleAnimationManager.IsAnimating())
             {
                 for (int i = 0; i < rippleAnimationManager.GetAnimationCount(); i++)
@@ -104,22 +130,25 @@ namespace MaterialSkin.Controls
                 }
             }
 
+            // draw radiobutton circle
             Color uncheckedColor = DrawHelper.BlendColor(Parent.BackColor, Enabled ? SkinManager.GetCheckboxOffColor() : SkinManager.GetCheckBoxOffDisabledColor(), backgroundAlpha);
 
             using (var path = DrawHelper.CreateRoundRect(boxOffset, boxOffset, RADIOBUTTON_SIZE, RADIOBUTTON_SIZE, 9f))
             {
                 g.FillPath(new SolidBrush(uncheckedColor), path);
-            }
 
-            if (Enabled)
-            {
-                using (var path = DrawHelper.CreateRoundRect(boxOffset, boxOffset, RADIOBUTTON_SIZE, RADIOBUTTON_SIZE, 9f))
-                {
+	            if (Enabled)
+	            {
                     g.FillPath(brush, path);
-                }
+	            }
             }
 
-            g.FillEllipse(new SolidBrush(Parent.BackColor), RADIOBUTTON_OUTER_CIRCLE_WIDTH + boxOffset, RADIOBUTTON_OUTER_CIRCLE_WIDTH + boxOffset, RADIOBUTTON_INNER_CIRCLE_SIZE, RADIOBUTTON_INNER_CIRCLE_SIZE);
+            g.FillEllipse(
+                new SolidBrush(Parent.BackColor), 
+                RADIOBUTTON_OUTER_CIRCLE_WIDTH + boxOffset, 
+                RADIOBUTTON_OUTER_CIRCLE_WIDTH + boxOffset, 
+                RADIOBUTTON_INNER_CIRCLE_SIZE,
+                RADIOBUTTON_INNER_CIRCLE_SIZE);
 
             if (Checked)
             {
@@ -137,8 +166,7 @@ namespace MaterialSkin.Controls
 
         private bool IsMouseInCheckArea()
         {
-            int boxOffset = Height / 2 - 8;
-            return new Rectangle(boxOffset, boxOffset, RADIOBUTTON_SIZE, RADIOBUTTON_SIZE).Contains(MouseLocation);
+            return radioButtonBounds.Contains(MouseLocation);
         }
 
         protected override void OnCreateControl()
@@ -165,7 +193,7 @@ namespace MaterialSkin.Controls
                 if (Ripple && args.Button == MouseButtons.Left && IsMouseInCheckArea())
                 {
                     rippleAnimationManager.SecondaryIncrement = 0;
-                    rippleAnimationManager.StartNewAnimation(AnimationDirection.InOutIn, data: new object[] { Checked });
+                    rippleAnimationManager.StartNewAnimation(AnimationDirection.InOutIn, new object[] { Checked });
                 }
             };
             MouseUp += (sender, args) =>
